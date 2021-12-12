@@ -1,0 +1,21 @@
+
+### Java ###
+build/
+target/
+log/
+logs/
+
+### Maven ###
+.mvn/
+
+### Gradle ###
+.gradle/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
