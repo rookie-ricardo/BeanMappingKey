@@ -3,8 +3,18 @@
     <name>BeanMappingKey</name>
     <vendor email="Rookie.Ricardo@outlook.com" url="https://github.com/rookie-ricardo">Github主页</vendor>
 
-    <description>An object mapping jetbrains plugin, it will automatically generate the get/set code between the two
-        objects.
+    <description>
+
+        <![CDATA[
+      <a href="https://github.com/rookie-ricardo/BeanMappingKey">GitHub</a>
+      <br/>
+      <br/>
+      <p>对象字段映射插件，它可以自动生成两个类之间的 get/set 方法，
+      用于替代 BeanUtil、MapStrut 之类的隐式对象转换插件，减少无用劳动的同时又能保留对象转换细节。</p>
+      <p>An object mapping jetbrains plugin, it will automatically generate the get/set code between the two objects.</p>
+      <p>It is used to replace implicit object conversion plug-ins such as BeanUtil and MapStrut, reduce useless labor while retaining the details of object conversion.</p>
+        ]]>
+
     </description>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
