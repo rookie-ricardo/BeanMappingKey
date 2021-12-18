@@ -21,4 +21,9 @@ public class IntellijNotifyUtil {
         // 2020.3 before
         NOTIFICATION_GROUP.createNotification(content, NotificationType.WARNING).notify(project);
     }
+
+    public static void notifyInfo(@Nullable Project project, String content) {
+        // 2020.3 before
+        NOTIFICATION_GROUP.createNotification(content, NotificationType.INFORMATION).notify(project);
+    }
 }

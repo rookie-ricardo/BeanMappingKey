@@ -16,8 +16,6 @@ public class BeanMappingKeyAction extends AnAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
-        System.out.println("================actionPerformed=================");
-
         // check
         if (!isEffective(e)) {
             return;
@@ -46,11 +44,6 @@ public class BeanMappingKeyAction extends AnAction {
 
         String selectedText = editor.getSelectionModel().getSelectedText(true);
 
-        if (StringUtils.isBlank(selectedText)
-                || StringUtils.isAllLowerCase(String.valueOf(selectedText.charAt(0)))) {
-            return false;
-        }
-
-        return true;
+        return !StringUtils.isBlank(selectedText);
     }
 }
