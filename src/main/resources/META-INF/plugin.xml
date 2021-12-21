@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.rookie.plugins.BeanMappingKey</id>
     <name>BeanMappingKey</name>
-    <vendor email="Rookie.Ricardo@outlook.com" url="https://github.com/rookie-ricardo">Github主页</vendor>
+    <vendor email="Rookie.Ricardo@outlook.com" url="https://github.com/rookie-ricardo">Rookie</vendor>
 
     <description>
 
@@ -36,4 +36,7 @@
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl M"/>
         </action>
     </actions>
+    
+    <idea-version since-build="171"/>
+
 </idea-plugin>

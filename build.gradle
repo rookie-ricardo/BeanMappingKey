@@ -32,8 +32,13 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>"""
+      1.0 版本 : <br>
+      <ul>
+        <li>1.0开发完成，支持三种生成模式。</li>
+      </ul>
+      """
+
+    sinceBuild = "171"
 }
 test {
     useJUnitPlatform()

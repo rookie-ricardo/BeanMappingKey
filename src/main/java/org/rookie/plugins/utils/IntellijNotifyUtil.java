@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 public class IntellijNotifyUtil {
 
     private static final NotificationGroup NOTIFICATION_GROUP =
-            new NotificationGroup("BeanMappingKey Notification Group",
+            new NotificationGroup("BeanMappingKeyNotification",
                     NotificationDisplayType.BALLOON, true);
 
     public static void notifyError(@Nullable Project project, String content) {

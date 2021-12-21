@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
-    private static final String INFO_MSG = "BeanMapping : success !";
+    private static final String INFO_MSG = "BeanMapping : 已复制到粘贴板 (Copied to pasteboard) !";
     private static final String ERROR_MSG = "BeanMapping : 当前所选对象不支持 (The currently selected object is not supported)";
     private boolean isSuccessful = true;
 
@@ -118,7 +118,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
         doSetField(psiClass, localVar);
 
         Arrays.stream(psiClass.getInnerClasses()).forEach(c -> {
-            if (c.getName().contains("Builder")) {
+            if (c.getName().endsWith("Builder")) {
                 doBuildField(c, psiClass.getName());
             }
         });
