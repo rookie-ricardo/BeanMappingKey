@@ -11,6 +11,7 @@ import com.intellij.psi.util.PsiTypesUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.rookie.plugins.utils.ClipboardUtil;
 import org.rookie.plugins.utils.IntellijNotifyUtil;
+import org.rookie.plugins.utils.TabUtil;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -76,31 +77,34 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
         if (Arrays.stream(to.getInnerClasses()).anyMatch(c -> c.getName().contains("Builder"))) {
             // builder model
-            context.append("\t\treturn ").append(to.getName()).append(".builder()\n");
+            context.append(TabUtil.getDoubleTabSpace()).append("return ").append(to.getName()).append(".builder()\n");
             Arrays.stream(to.getAllFields()).forEach(f -> {
                 String val = fromFieldMap.get(f.getName());
                 if (StringUtils.isNotEmpty(val)) {
-                    context.append("\t\t\t\t.").append(f.getName())
+                    context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
+                            .append(".").append(f.getName())
                             .append("(").append(fromVarName).append(".").append(val).append("())\n");
                 }
             });
-            context.append("\t\t\t\t.build();");
+            context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace()).append(".build();");
 
         } else {
             // set model
             String localVar = String.valueOf(to.getName().charAt(0)).toLowerCase() + to.getName().substring(1);
-            context.append("\t\t").append(to.getName()).append(" ").append(localVar)
+            context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
+                    .append(to.getName()).append(" ").append(localVar)
                     .append(" = new ").append(to.getName()).append("();\n");
             Arrays.stream(to.getAllFields()).forEach(f -> {
                 String val = fromFieldMap.get(f.getName());
                 if (StringUtils.isNotEmpty(val)) {
-                    context.append("\t\t").append(localVar).append(".").append("set")
+                    context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
+                            .append(localVar).append(".").append("set")
                             .append(String.valueOf(f.getName().charAt(0)).toUpperCase())
                             .append(f.getName().substring(1))
                             .append("(").append(fromVarName).append(".").append(val).append("());\n");
                 }
             });
-            context.append("\t\treturn ").append(localVar).append(";");
+            context.append(TabUtil.getDoubleTabSpace()).append("return ").append(localVar).append(";");
         }
 
         Document document = FileDocumentManager.getInstance()
@@ -127,7 +131,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     private void doBuildField(PsiClass psiClass, String className) {
 
         StringBuilder context = new StringBuilder();
-        context.append(className).append(".builder()\n");
+        context.append("return ").append(className).append(".builder()\n");
 
         Arrays.stream(psiClass.getAllFields()).forEach(f -> context.append(".").append(f.getName()).append("()\n"));
 
@@ -147,7 +151,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
         String var = localVar;
         Arrays.stream(psiClass.getAllMethods()).forEach(m -> {
             if (m.getName().startsWith("set")) {
-                context.append("\t").append(var).append(".").append(m.getName()).append("();\n");
+                context.append(TabUtil.getTabSpace()).append(var).append(".").append(m.getName()).append("();\n");
             }
         });
 
