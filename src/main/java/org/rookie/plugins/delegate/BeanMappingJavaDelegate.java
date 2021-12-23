@@ -80,11 +80,12 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
             context.append(TabUtil.getDoubleTabSpace()).append("return ").append(to.getName()).append(".builder()\n");
             Arrays.stream(to.getAllFields()).forEach(f -> {
                 String val = fromFieldMap.get(f.getName());
+                context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
+                        .append(".").append(f.getName()).append("(");
                 if (StringUtils.isNotEmpty(val)) {
-                    context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
-                            .append(".").append(f.getName())
-                            .append("(").append(fromVarName).append(".").append(val).append("())\n");
+                    context.append(fromVarName).append(".").append(val).append("()");
                 }
+                context.append(")\n");
             });
             context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace()).append(".build();");
 
