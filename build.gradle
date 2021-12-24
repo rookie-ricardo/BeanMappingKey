@@ -32,9 +32,9 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
-      1.0 版本 : <br>
+      1.0 (2021-12-24) <br>
       <ul>
-        <li>1.0开发完成，支持三种生成模式。</li>
+        <li>The first version has been developed and supports three code generation modes.</li>
       </ul>
       """
 
