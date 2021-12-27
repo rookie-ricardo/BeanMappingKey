@@ -6,13 +6,10 @@
     <description>
 
         <![CDATA[
-      <a href="https://github.com/rookie-ricardo/BeanMappingKey">GitHub</a>
-      <br/>
-      <br/>
-      <p>An object mapping jetbrains plugin, it will automatically generate the get/set code between the two objects.</p>
+      <p>An object field mapping plug-in, which can automatically generate conversion codes between two objects.</p>
       <p>It is used to replace implicit object conversion plug-ins such as BeanUtil and MapStrut, reduce useless labor while retaining the details of object conversion.</p>
       <br/>
-      <p>对象字段映射插件，它可以自动生成两个类之间的 get/set 方法，
+      <p>一个对象字段映射插件，它可以自动生成两个对象之间的转换代码，
       用于替代 BeanUtil、MapStrut 之类的隐式对象转换插件，减少无用劳动的同时又能保留对象转换细节。</p>
         ]]>
 
@@ -35,6 +32,8 @@
                 description="Map the fields of the first class to the second class">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl M"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="ctrl alt M"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl alt M"/>
         </action>
     </actions>
     
