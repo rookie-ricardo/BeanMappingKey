@@ -12,7 +12,7 @@ tasks.withType(Javadoc) {
 }
 
 group 'org.rookie.plugins'
-version '1.0-SNAPSHOT'
+version '1.0'
 
 sourceCompatibility = 1.8
 
