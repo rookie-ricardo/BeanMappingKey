@@ -55,8 +55,11 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
             return;
         }
 
-        String fromVarName = psiMethod.getParameterList().getParameter(0).getName();
-        PsiClass from = PsiTypesUtil.getPsiClass(psiMethod.getParameterList().getParameter(0).getType());
+        PsiParameter psiParameter = psiMethod.getParameterList().getParameter(0);
+        assert psiParameter != null;
+
+        String fromVarName = psiParameter.getName();
+        PsiClass from = PsiTypesUtil.getPsiClass(psiParameter.getType());
         PsiClass to = PsiTypesUtil.getPsiClass(psiMethod.getReturnType());
 
         // process from field and getMethod
