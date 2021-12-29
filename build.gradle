@@ -38,7 +38,7 @@ patchPluginXml {
       </ul>
       """
 
-    sinceBuild = "171"
+    sinceBuild = "201"
 }
 test {
     useJUnitPlatform()
