@@ -27,6 +27,7 @@
 
 For the time being, only versions above 2020 are supported, no need to restart ide after installation.
 
+<br/>
 
 ## Start Guide
 
