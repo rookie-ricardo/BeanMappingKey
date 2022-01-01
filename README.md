@@ -16,15 +16,26 @@
 
 <br/>
 
+## 安装指南
+
+- 在 `Windows` 系统上安装:
+    - <kbd>File</kbd> > <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Browse repositories...</kbd> > <kbd>Search for "BeanMappingKey"</kbd> > <kbd>Install Plugin</kbd>
+- 在 `MacOS` 系统上安装:
+    - <kbd>Preferences</kbd> > <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Browse repositories...</kbd> > <kbd>Search for "BeanMappingKey"</kbd> > <kbd>Install Plugin</kbd>
+- 手动安装:
+    - 下载 [latest release](https://github.com/rookie-ricardo/BeanMappingKey/releases/latest) 之后， 选择 <kbd>Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Install plugin from disk...</kbd>
+
+暂且只支持 2020 以上版本的 IDE，安装之后无需重启 IDE。
+
 ## 使用指南
 
 在 Java 开发的过程中，经常会使用众多包装型的对象如：BO、VO、DTO，它们之间往往只有两三个字段的差异， 
 而对它们进行相互转换则是一项耗时耗力的体力活，所以 Java 生态中就衍生出了 `BeanUtil` 与 `MapStruct` 这种工具，
-然而 `BeanUtil` 无法查看对象转换细节，`MapStruct` 有时则会遇到对象转换不理想的情况，所以你仍需手动编写对象转换代码。
+然而 `BeanUtil` 无法查看对象转换细节，`MapStruct` 有时则会遇到对象转换不尽如人意的情况，此时你仍需手动编写对象转换代码。
 
 <br/>
 
-BeanMappingKey 就是为了解决此类需求而开发的，它（暂时）一共有三种用法：
+BeanMappingKey 就是为了解决繁琐的手动对象转换而开发的，它（暂时）一共有三种用法：
 
 - 选中一个带有返回值和参数的方法，使用快捷键 `Ctrl+M` 或者右键点击 BeanMappingKey，
 就能自动插入相关转换代码。

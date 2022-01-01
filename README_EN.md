@@ -16,6 +16,18 @@
 
 <br/>
 
+## Installation Guide
+
+- Using IDE built-in plugin system on Windows:
+    - <kbd>File</kbd> > <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Browse repositories...</kbd> > <kbd>Search for "BeanMappingKey"</kbd> > <kbd>Install Plugin</kbd>
+- Using IDE built-in plugin system on MacOs:
+    - <kbd>Preferences</kbd> > <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Browse repositories...</kbd> > <kbd>Search for "BeanMappingKey"</kbd> > <kbd>Install Plugin</kbd>
+- Manually:
+    - Download the [latest release](https://github.com/rookie-ricardo/BeanMappingKey/releases/latest) and install it manually using <kbd>Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Install plugin from disk...</kbd>
+
+For the time being, only versions above 2020 are supported, no need to restart ide after installation.
+
+
 ## Start Guide
 
 In the process of Java development, many packaging objects such as BO, VO, DTO are often used, and there are often only two or three field differences between them.
