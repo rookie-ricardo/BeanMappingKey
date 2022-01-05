@@ -12,7 +12,7 @@ tasks.withType(Javadoc) {
 }
 
 group 'org.rookie.plugins'
-version '1.0'
+version '1.1'
 
 sourceCompatibility = 1.8
 
@@ -32,6 +32,11 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+      1.1 (2022-01-05) <br>
+      <ul>
+        <li>Fix the NPE when the method parameter is the basic data type.</li>
+        <li>Support method multi-parameter.</li>
+      </ul>
       1.0 (2021-12-24) <br>
       <ul>
         <li>The first version has been developed and supports three code generation modes.</li>

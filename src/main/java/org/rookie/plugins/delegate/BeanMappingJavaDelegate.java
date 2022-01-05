@@ -11,11 +11,12 @@ import com.intellij.psi.util.PsiTypesUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.rookie.plugins.utils.ClipboardUtil;
 import org.rookie.plugins.utils.IntellijNotifyUtil;
+import org.rookie.plugins.utils.JavaClassUtil;
 import org.rookie.plugins.utils.TabUtil;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
@@ -55,26 +56,9 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
             return;
         }
 
-        PsiParameter psiParameter = psiMethod.getParameterList().getParameter(0);
-        assert psiParameter != null;
-
-        String fromVarName = psiParameter.getName();
-        PsiClass from = PsiTypesUtil.getPsiClass(psiParameter.getType());
-        PsiClass to = PsiTypesUtil.getPsiClass(psiMethod.getReturnType());
-
         // process from field and getMethod
-        Map<String, String> fromFieldMap = Arrays.stream(from.getAllFields())
-                .collect(Collectors.toMap(PsiField::getName, PsiField::getName));
-
-        Arrays.stream(from.getAllMethods()).forEach(m -> {
-            if (m.getName().startsWith("get")) {
-                fromFieldMap.keySet().forEach(k -> {
-                    if (m.getName().equalsIgnoreCase(("get" + k))) {
-                        fromFieldMap.put(k, m.getName());
-                    }
-                });
-            }
-        });
+        Map<String, String> fromFieldMap = toParamsFieldMap(psiMethod.getParameterList());
+        PsiClass to = PsiTypesUtil.getPsiClass(psiMethod.getReturnType());
 
         StringBuilder context = new StringBuilder();
 
@@ -86,7 +70,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
                 context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
                         .append(".").append(f.getName()).append("(");
                 if (StringUtils.isNotEmpty(val)) {
-                    context.append(fromVarName).append(".").append(val).append("()");
+                    context.append(val);
                 }
                 context.append(")\n");
             });
@@ -95,17 +79,17 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
         } else {
             // set model
             String localVar = String.valueOf(to.getName().charAt(0)).toLowerCase() + to.getName().substring(1);
-            context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
+            context.append(TabUtil.getDoubleTabSpace())
                     .append(to.getName()).append(" ").append(localVar)
                     .append(" = new ").append(to.getName()).append("();\n");
             Arrays.stream(to.getAllFields()).forEach(f -> {
                 String val = fromFieldMap.get(f.getName());
                 if (StringUtils.isNotEmpty(val)) {
-                    context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
+                    context.append(TabUtil.getDoubleTabSpace())
                             .append(localVar).append(".").append("set")
                             .append(String.valueOf(f.getName().charAt(0)).toUpperCase())
                             .append(f.getName().substring(1))
-                            .append("(").append(fromVarName).append(".").append(val).append("());\n");
+                            .append("(").append(val).append(");\n");
                 }
             });
             context.append(TabUtil.getDoubleTabSpace()).append("return ").append(localVar).append(";");
@@ -115,6 +99,36 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
                 .getDocument(psiMethod.getContainingFile().getVirtualFile());
         WriteCommandAction.runWriteCommandAction(psiMethod.getProject(),
                 () -> document.insertString(psiMethod.getBody().getTextOffset() + 1, "\n" + context));
+    }
+
+    private HashMap<String, String> toParamsFieldMap(PsiParameterList list) {
+        HashMap<String, String> map = new HashMap<>();
+        for (PsiParameter parameter : list.getParameters()) {
+            if (parameter != null) {
+                if (JavaClassUtil.isNotBasicType(parameter.getType().getPresentableText())) {
+                    PsiClass from = PsiTypesUtil.getPsiClass(parameter.getType());
+                    if (from != null) {
+                        HashMap<String, String> temp = new HashMap<>();
+                        Arrays.stream(from.getAllFields())
+                                .forEach(f -> temp.put(f.getName(), f.getName()));
+                        String fromVarName = parameter.getName();
+                        Arrays.stream(from.getAllMethods()).forEach(m -> {
+                            if (m.getName().startsWith("get")) {
+                                temp.keySet().forEach(k -> {
+                                    if (m.getName().equalsIgnoreCase(("get" + k))) {
+                                        temp.put(k, fromVarName + "." + m.getName() + "()");
+                                    }
+                                });
+                            }
+                        });
+                        map.putAll(temp);
+                    }
+                } else {
+                    map.put(parameter.getName(), parameter.getName());
+                }
+            }
+        }
+        return map;
     }
 
     private void doPsiClass(PsiClass psiClass, String localVar) {
