@@ -25,7 +25,7 @@
 - 手动安装:
     - 下载 [latest release](https://github.com/rookie-ricardo/BeanMappingKey/releases/latest) 之后， 选择 <kbd>Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Install plugin from disk...</kbd>
 
-暂且只支持 2020 以上版本的 IDE，安装之后无需重启 IDE。
+注：暂且只支持 2020 以上版本的 IDEA，安装之后无需重启。
 
 <br/>
 

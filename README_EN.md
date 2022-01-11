@@ -25,7 +25,7 @@
 - Manually:
     - Download the [latest release](https://github.com/rookie-ricardo/BeanMappingKey/releases/latest) and install it manually using <kbd>Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Install plugin from disk...</kbd>
 
-For the time being, only versions above 2020 are supported, no need to restart ide after installation.
+PS: For the time being, only versions above 2020 are supported, no need to restart ide after installation.
 
 <br/>
 
