@@ -141,7 +141,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
         Arrays.stream(psiClass.getInnerClasses()).forEach(c -> {
             if (c.getName().endsWith("Builder")) {
-                doBuildField(c, psiClass.getName());
+                doBuildField(psiClass, psiClass.getName());
             }
         });
     }
