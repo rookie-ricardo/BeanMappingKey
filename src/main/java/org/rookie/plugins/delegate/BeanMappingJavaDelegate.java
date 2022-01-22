@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTypesUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.rookie.plugins.bean.JavaMetaBean;
 import org.rookie.plugins.utils.ClipboardUtil;
 import org.rookie.plugins.utils.IntellijNotifyUtil;
 import org.rookie.plugins.utils.JavaClassUtil;
@@ -17,6 +18,7 @@ import org.rookie.plugins.utils.TabUtil;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
@@ -57,7 +59,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
         }
 
         // process from field and getMethod
-        Map<String, String> fromFieldMap = toParamsFieldMap(psiMethod.getParameterList());
+        Map<String, JavaMetaBean> fromFieldMap = toParamsFieldMap(psiMethod.getParameterList());
         PsiClass to = PsiTypesUtil.getPsiClass(psiMethod.getReturnType());
 
         StringBuilder context = new StringBuilder();
@@ -66,16 +68,16 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
             // builder model
             context.append(TabUtil.getDoubleTabSpace()).append("return ").append(to.getName()).append(".builder()\n");
             Arrays.stream(to.getAllFields()).forEach(f -> {
-                String val = fromFieldMap.get(f.getName());
+                JavaMetaBean val = fromFieldMap.get(f.getName());
                 context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
                         .append(".").append(f.getName()).append("(");
-                if (StringUtils.isNotEmpty(val)) {
-                    context.append(val);
+                if (!Objects.isNull(val)) {
+                    context.append(val.getMethodText());
                 }
                 context.append(")\n");
             });
-            context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace()).append(".build();");
 
+            context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace()).append(".build();");
         } else {
             // set model
             String localVar = String.valueOf(to.getName().charAt(0)).toLowerCase() + to.getName().substring(1);
@@ -83,13 +85,13 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
                     .append(to.getName()).append(" ").append(localVar)
                     .append(" = new ").append(to.getName()).append("();\n");
             Arrays.stream(to.getAllFields()).forEach(f -> {
-                String val = fromFieldMap.get(f.getName());
-                if (StringUtils.isNotEmpty(val)) {
+                JavaMetaBean val = fromFieldMap.get(f.getName());
+                if (!Objects.isNull(val)) {
                     context.append(TabUtil.getDoubleTabSpace())
                             .append(localVar).append(".").append("set")
                             .append(String.valueOf(f.getName().charAt(0)).toUpperCase())
                             .append(f.getName().substring(1))
-                            .append("(").append(val).append(");\n");
+                            .append("(").append(val.getMethodText()).append(");\n");
                 }
             });
             context.append(TabUtil.getDoubleTabSpace()).append("return ").append(localVar).append(";");
@@ -101,22 +103,29 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
                 () -> document.insertString(psiMethod.getBody().getTextOffset() + 1, "\n" + context));
     }
 
-    private HashMap<String, String> toParamsFieldMap(PsiParameterList list) {
-        HashMap<String, String> map = new HashMap<>();
+    private HashMap<String, JavaMetaBean> toParamsFieldMap(PsiParameterList list) {
+        HashMap<String, JavaMetaBean> map = new HashMap<>();
         for (PsiParameter parameter : list.getParameters()) {
             if (parameter != null) {
+                // 非基础数据参数
                 if (JavaClassUtil.isNotBasicType(parameter.getType().getPresentableText())) {
                     PsiClass from = PsiTypesUtil.getPsiClass(parameter.getType());
                     if (from != null) {
-                        HashMap<String, String> temp = new HashMap<>();
+                        // 先将实体类的参数作为key写入map
+                        HashMap<String, JavaMetaBean> temp = new HashMap<>();
                         Arrays.stream(from.getAllFields())
-                                .forEach(f -> temp.put(f.getName(), f.getName()));
+                                .forEach(f -> temp.put(f.getName(), null));
+
+                        // 填充map的val值
                         String fromVarName = parameter.getName();
                         Arrays.stream(from.getAllMethods()).forEach(m -> {
                             if (m.getName().startsWith("get")) {
                                 temp.keySet().forEach(k -> {
                                     if (m.getName().equalsIgnoreCase(("get" + k))) {
-                                        temp.put(k, fromVarName + "." + m.getName() + "()");
+                                        JavaMetaBean bean = new JavaMetaBean();
+                                        bean.setType(m.getReturnType().getPresentableText());
+                                        bean.setMethodText(fromVarName + "." + m.getName() + "()");
+                                        temp.put(k, bean);
                                     }
                                 });
                             }
@@ -124,7 +133,10 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
                         map.putAll(temp);
                     }
                 } else {
-                    map.put(parameter.getName(), parameter.getName());
+                    JavaMetaBean bean = new JavaMetaBean();
+                    bean.setType(parameter.getType().getPresentableText());
+                    bean.setMethodText(parameter.getName());
+                    map.put(parameter.getName(), bean);
                 }
             }
         }
