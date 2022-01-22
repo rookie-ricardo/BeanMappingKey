@@ -10,10 +10,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTypesUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.rookie.plugins.bean.JavaMetaBean;
-import org.rookie.plugins.utils.ClipboardUtil;
-import org.rookie.plugins.utils.IntellijNotifyUtil;
-import org.rookie.plugins.utils.JavaClassUtil;
-import org.rookie.plugins.utils.TabUtil;
+import org.rookie.plugins.utils.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -108,7 +105,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
         for (PsiParameter parameter : list.getParameters()) {
             if (parameter != null) {
                 // 非基础数据参数
-                if (JavaClassUtil.isNotBasicType(parameter.getType().getPresentableText())) {
+                if (JavaClassTypeUtil.isEntityClass(parameter.getType())) {
                     PsiClass from = PsiTypesUtil.getPsiClass(parameter.getType());
                     if (from != null) {
                         // 先将实体类的参数作为key写入map
@@ -145,9 +142,38 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
     private void doPsiClass(PsiClass psiClass, String localVar) {
 
-        if (isNotAvailablePsiClass(psiClass)) {
-            return;
+        // 基础数据类型 & 枚举类型 处理
+        if (JavaClassTypeUtil.isEnum(psiClass.getName()) || JavaClassTypeUtil.isBasic(psiClass.getName())
+                || JavaClassTypeUtil.isArray(psiClass) || psiClass.isInterface()
+                || JavaClassTypeUtil.isList(psiClass) || JavaClassTypeUtil.isMap(psiClass)) {
+
+            // check
+            doErrorNotify(psiClass.getProject());
+        } else if (JavaClassTypeUtil.isWrap(psiClass)) {
+
+            // 包装类型
+            doNewClass(psiClass, localVar);
+        } else  {
+
+            // 自定义实体类处理
+            doEntityClass(psiClass, localVar);
         }
+    }
+
+    private void doNewClass(PsiClass psiClass, String localVar) {
+
+        StringBuilder context = new StringBuilder();
+
+        String name = StringUtils.isBlank(localVar) ? HumpNamingUtil.hump(psiClass.getName()) : localVar;
+
+        context.append(psiClass.getName()).append(" ")
+                .append(name)
+                .append(" = ").append(psiClass.getName()).append(".valueOf();");
+
+        ClipboardUtil.setClipboard(context.toString());
+    }
+
+    private void doEntityClass(PsiClass psiClass, String localVar) {
 
         doSetField(psiClass, localVar);
 
@@ -161,6 +187,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     private void doBuildField(PsiClass psiClass, String className) {
 
         StringBuilder context = new StringBuilder();
+
         context.append("return ").append(className).append(".builder()\n");
 
         Arrays.stream(psiClass.getAllFields()).forEach(f -> context.append(".").append(f.getName()).append("()\n"));
@@ -172,16 +199,15 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     private void doSetField(PsiClass psiClass, String localVar) {
 
         StringBuilder context = new StringBuilder();
-        if (StringUtils.isBlank(localVar)) {
-            localVar = String.valueOf(psiClass.getName().charAt(0)).toLowerCase() + psiClass.getName().substring(1);
-            context.append(psiClass.getName()).append(" ").append(localVar).append(" = new ")
-                    .append(psiClass.getName()).append("();\n");
-        }
 
-        String var = localVar;
+        String name = StringUtils.isBlank(localVar) ? HumpNamingUtil.hump(psiClass.getName()) : localVar;
+
+        context.append(psiClass.getName()).append(" ").append(name).append(" = new ")
+                .append(psiClass.getName()).append("();\n");
+
         Arrays.stream(psiClass.getAllMethods()).forEach(m -> {
             if (m.getName().startsWith("set")) {
-                context.append(TabUtil.getTabSpace()).append(var).append(".").append(m.getName()).append("();\n");
+                context.append(TabUtil.getTabSpace()).append(name).append(".").append(m.getName()).append("();\n");
             }
         });
 
@@ -189,20 +215,12 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     }
 
     private void doPsiLocalVariable(PsiLocalVariable psiVariable) {
-        PsiElement element = psiVariable.getParent();
-        if (element instanceof PsiClass) {
-            doPsiClass((PsiClass) element, psiVariable.getName());
-        } else {
+        PsiClass psiClass = PsiTypesUtil.getPsiClass(psiVariable.getType());
+        if (Objects.isNull(psiClass)) {
             doErrorNotify(psiVariable.getProject());
+        } else {
+            doPsiClass(psiClass, psiVariable.getName());
         }
-    }
-
-    private boolean isNotAvailablePsiClass(PsiClass psiClass) {
-        if (psiClass.isInterface()) {
-            doErrorNotify(psiClass.getProject());
-            return true;
-        }
-        return false;
     }
 
     private boolean isNotAvailablePsiMethod(PsiMethod psiMethod) {
