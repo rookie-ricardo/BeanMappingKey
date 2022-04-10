@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.PsiParameterImpl;
 import com.intellij.psi.util.PsiTypesUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.rookie.plugins.bean.JavaMetaBean;
@@ -28,6 +29,13 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
         PsiElement element = e.getData(LangDataKeys.PSI_ELEMENT);
 
+        /**
+         * PsiMethod 指选中方法生成代码
+         * PsiClass 指选中类生成代码
+         * PsiLocalVariable 指选中本地变量生成代码
+         * PsiParameterImpl 指选中一个方法中的参数名生成代码
+         * 本质上只有 PsiMethod 和 PsiClass 两种，因为只会出现这几种情况，所以使用 if - else 处理
+         */
         if (element instanceof PsiMethod) {
 
             doPsiMethod((PsiMethod) element);
@@ -39,6 +47,10 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
         } else if (element instanceof PsiLocalVariable) {
 
             doPsiLocalVariable((PsiLocalVariable) element);
+
+        } else if (element instanceof PsiParameterImpl) {
+
+            doPsiParameterImpl((PsiParameterImpl) element);
 
         } else {
 
@@ -143,7 +155,9 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     private void doPsiClass(PsiClass psiClass, String localVar) {
 
         // 基础数据类型 & 枚举类型 处理
-        if (JavaClassTypeUtil.isEnum(psiClass.getName()) || JavaClassTypeUtil.isBasic(psiClass.getName())
+        if (Objects.isNull(psiClass)
+                || JavaClassTypeUtil.isEnum(psiClass.getName())
+                || JavaClassTypeUtil.isBasic(psiClass.getName())
                 || JavaClassTypeUtil.isArray(psiClass) || psiClass.isInterface()
                 || JavaClassTypeUtil.isList(psiClass) || JavaClassTypeUtil.isMap(psiClass)) {
 
@@ -216,11 +230,12 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
     private void doPsiLocalVariable(PsiLocalVariable psiVariable) {
         PsiClass psiClass = PsiTypesUtil.getPsiClass(psiVariable.getType());
-        if (Objects.isNull(psiClass)) {
-            doErrorNotify(psiVariable.getProject());
-        } else {
-            doPsiClass(psiClass, psiVariable.getName());
-        }
+        doPsiClass(psiClass, psiVariable.getName());
+    }
+
+    private void doPsiParameterImpl(PsiParameterImpl parameter) {
+        PsiClass psiClass = PsiTypesUtil.getPsiClass(parameter.getType());
+        doPsiClass(psiClass, parameter.getName());
     }
 
     private boolean isNotAvailablePsiMethod(PsiMethod psiMethod) {
