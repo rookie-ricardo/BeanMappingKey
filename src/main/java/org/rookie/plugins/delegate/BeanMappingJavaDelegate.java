@@ -67,6 +67,11 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
             return;
         }
 
+        if (psiMethod.isConstructor()) {
+            doPsiConstructor(psiMethod);
+            return;
+        }
+
         // process from field and getMethod
         Map<String, JavaMetaBean> fromFieldMap = toParamsFieldMap(psiMethod.getParameterList());
         PsiClass to = PsiTypesUtil.getPsiClass(psiMethod.getReturnType());
@@ -110,6 +115,27 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
                 .getDocument(psiMethod.getContainingFile().getVirtualFile());
         WriteCommandAction.runWriteCommandAction(psiMethod.getProject(),
                 () -> document.insertString(psiMethod.getBody().getTextOffset() + 1, "\n" + context));
+    }
+
+    private void doPsiConstructor(PsiMethod psiMethod) {
+        // process from field and getMethod
+        Map<String, JavaMetaBean> fromFieldMap = toParamsFieldMap(psiMethod.getParameterList());
+        PsiClass to = psiMethod.getContainingClass();
+
+        StringBuilder context = new StringBuilder();
+
+        Arrays.stream(to.getAllFields()).forEach(f -> {
+            JavaMetaBean val = fromFieldMap.get(f.getName());
+            if (!Objects.isNull(val)) {
+                context.append(TabUtil.getDoubleTabSpace())
+                    .append("this.").append(f.getName()).append("=").append(val.getMethodText()).append(";\n");
+            }
+        });
+
+        Document document = FileDocumentManager.getInstance()
+            .getDocument(psiMethod.getContainingFile().getVirtualFile());
+        WriteCommandAction.runWriteCommandAction(psiMethod.getProject(),
+            () -> document.insertString(psiMethod.getBody().getTextOffset() + 1, "\n" + context));
     }
 
     private HashMap<String, JavaMetaBean> toParamsFieldMap(PsiParameterList list) {
