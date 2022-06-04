@@ -1,16 +1,18 @@
 package org.rookie.plugins.bean;
 
+import com.intellij.psi.PsiType;
+
 public class JavaMetaBean {
 
-    private String type;
+    private PsiType type;
 
     private String methodText;
 
-    public String getType() {
+    public PsiType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(PsiType type) {
         this.type = type;
     }
 
@@ -20,5 +22,13 @@ public class JavaMetaBean {
 
     public void setMethodText(String methodText) {
         this.methodText = methodText;
+    }
+
+    @Override
+    public String toString() {
+        return "JavaMetaBean{" +
+                "type=" + type.getPresentableText() +
+                ", methodText='" + methodText + '\'' +
+                '}';
     }
 }

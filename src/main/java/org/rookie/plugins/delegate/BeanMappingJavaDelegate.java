@@ -13,10 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.rookie.plugins.bean.JavaMetaBean;
 import org.rookie.plugins.utils.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
@@ -69,19 +66,41 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
         // process from field and getMethod
         Map<String, JavaMetaBean> fromFieldMap = toParamsFieldMap(psiMethod.getParameterList());
-        PsiClass to = PsiTypesUtil.getPsiClass(psiMethod.getReturnType());
+        PsiClass returnClass = PsiTypesUtil.getPsiClass(psiMethod.getReturnType());
 
         StringBuilder context = new StringBuilder();
 
-        if (Arrays.stream(to.getInnerClasses()).anyMatch(c -> c.getName().contains("Builder"))) {
+        if (Arrays.stream(returnClass.getInnerClasses()).anyMatch(c -> c.getName().contains("Builder"))) {
             // builder model
-            context.append(TabUtil.getDoubleTabSpace()).append("return ").append(to.getName()).append(".builder()\n");
-            Arrays.stream(to.getAllFields()).forEach(f -> {
-                JavaMetaBean val = fromFieldMap.get(f.getName());
+            context.append(TabUtil.getDoubleTabSpace()).append("return ").append(returnClass.getName()).append(".builder()\n");
+            Arrays.stream(returnClass.getAllFields()).forEach(f -> {
+
                 context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace())
                         .append(".").append(f.getName()).append("(");
-                if (!Objects.isNull(val)) {
-                    context.append(val.getMethodText());
+                PsiClass parameterClass = PsiTypesUtil.getPsiClass(f.getType());
+
+                if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+                    context.append(parameterClass.getName()).append(".builder()\n");
+
+                    Arrays.stream(parameterClass.getAllFields()).forEach(subF -> {
+                        context.append(TabUtil.getDoubleTabSpace())
+                                .append(TabUtil.getDoubleTabSpace())
+                                .append(TabUtil.getDoubleTabSpace())
+                                .append(".").append(subF.getName()).append("(");
+                        JavaMetaBean val = fromFieldMap.get(f.getName() + ".get" + HumpNamingUtil.humpFirstUp(subF.getName()));
+                        if (!Objects.isNull(val)) {
+                            context.append(val.getMethodText());
+                        }
+                        context.append(")\n");
+                    });
+                    context.append(TabUtil.getDoubleTabSpace())
+                            .append(TabUtil.getDoubleTabSpace())
+                            .append(TabUtil.getDoubleTabSpace()).append(".build()");
+                } else {
+                    JavaMetaBean val = fromFieldMap.get(f.getName());
+                    if (!Objects.isNull(val)) {
+                        context.append(val.getMethodText());
+                    }
                 }
                 context.append(")\n");
             });
@@ -89,18 +108,50 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
             context.append(TabUtil.getDoubleTabSpace()).append(TabUtil.getDoubleTabSpace()).append(".build();");
         } else {
             // set model
-            String localVar = String.valueOf(to.getName().charAt(0)).toLowerCase() + to.getName().substring(1);
+            String localVar = HumpNamingUtil.hump(returnClass.getName());
             context.append(TabUtil.getDoubleTabSpace())
-                    .append(to.getName()).append(" ").append(localVar)
-                    .append(" = new ").append(to.getName()).append("();\n");
-            Arrays.stream(to.getAllFields()).forEach(f -> {
-                JavaMetaBean val = fromFieldMap.get(f.getName());
-                if (!Objects.isNull(val)) {
+                    .append(returnClass.getName()).append(" ").append(localVar)
+                    .append(" = new ").append(returnClass.getName()).append("();\n");
+
+            Arrays.stream(returnClass.getAllFields()).forEach(f -> {
+
+                PsiClass parameterClass = PsiTypesUtil.getPsiClass(f.getType());
+
+                // 嵌套实体
+                if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+
+                    context.append(TabUtil.getDoubleTabSpace())
+                            .append(parameterClass.getName()).append(" ").append(f.getName())
+                            .append(" = new ").append(parameterClass.getName()).append("();\n");
+
+                    Arrays.stream(parameterClass.getAllFields()).forEach(subF -> {
+                        context.append(TabUtil.getDoubleTabSpace())
+                                .append(f.getName()).append(".").append("set")
+                                .append(HumpNamingUtil.humpFirstUp(subF.getName()))
+                                .append("(");
+                        JavaMetaBean val = fromFieldMap.get(f.getName() + ".get" + HumpNamingUtil.humpFirstUp(subF.getName()));
+                        if (!Objects.isNull(val)) {
+                            context.append(val.getMethodText());
+                        }
+
+                        context.append(");\n");
+                    });
                     context.append(TabUtil.getDoubleTabSpace())
                             .append(localVar).append(".").append("set")
-                            .append(String.valueOf(f.getName().charAt(0)).toUpperCase())
-                            .append(f.getName().substring(1))
-                            .append("(").append(val.getMethodText()).append(");\n");
+                            .append(HumpNamingUtil.humpFirstUp(f.getName()))
+                            .append("(")
+                            .append(f.getName())
+                            .append(");\n");
+                } else {
+                    context.append(TabUtil.getDoubleTabSpace())
+                            .append(localVar).append(".").append("set")
+                            .append(HumpNamingUtil.humpFirstUp(f.getName()))
+                            .append("(");
+                    JavaMetaBean val = fromFieldMap.get(f.getName());
+                    if (!Objects.isNull(val)) {
+                        context.append(val.getMethodText());
+                    }
+                    context.append(");\n");
                 }
             });
             context.append(TabUtil.getDoubleTabSpace()).append("return ").append(localVar).append(";");
@@ -115,39 +166,53 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     private HashMap<String, JavaMetaBean> toParamsFieldMap(PsiParameterList list) {
         HashMap<String, JavaMetaBean> map = new HashMap<>();
         for (PsiParameter parameter : list.getParameters()) {
-            if (parameter != null) {
-                // 非基础数据参数
-                if (JavaClassTypeUtil.isEntityClass(parameter.getType())) {
-                    PsiClass from = PsiTypesUtil.getPsiClass(parameter.getType());
-                    if (from != null) {
-                        // 先将实体类的参数作为key写入map
-                        HashMap<String, JavaMetaBean> temp = new HashMap<>();
-                        Arrays.stream(from.getAllFields())
-                                .forEach(f -> temp.put(f.getName(), null));
-
-                        // 填充map的val值
-                        String fromVarName = parameter.getName();
-                        Arrays.stream(from.getAllMethods()).forEach(m -> {
-                            if (m.getName().startsWith("get")) {
-                                temp.keySet().forEach(k -> {
-                                    if (m.getName().equalsIgnoreCase(("get" + k))) {
-                                        JavaMetaBean bean = new JavaMetaBean();
-                                        bean.setType(m.getReturnType().getPresentableText());
-                                        bean.setMethodText(fromVarName + "." + m.getName() + "()");
-                                        temp.put(k, bean);
-                                    }
-                                });
-                            }
-                        });
-                        map.putAll(temp);
-                    }
-                } else {
-                    JavaMetaBean bean = new JavaMetaBean();
-                    bean.setType(parameter.getType().getPresentableText());
-                    bean.setMethodText(parameter.getName());
-                    map.put(parameter.getName(), bean);
-                }
+            if (parameter == null) {
+                continue;
             }
+            map.putAll(recursionToJavaMetaBean(parameter.getName(),"", parameter.getType()));
+        }
+        return map;
+    }
+
+    private HashMap<String, JavaMetaBean> recursionToJavaMetaBean(String parameterName, String prefix, PsiType psiType) {
+        HashMap<String, JavaMetaBean> map = new HashMap<>();
+
+        PsiClass psiClass = PsiTypesUtil.getPsiClass(psiType);
+        if (psiClass == null) return  map;
+
+        // 非基础类型参数
+        if (JavaClassTypeUtil.isEntityClass(psiClass)) {
+
+            Arrays.stream(psiClass.getMethods())
+                    .filter(m -> m.getName().startsWith("get"))
+                    .forEach(m -> {
+                        PsiClass parameterClass = PsiTypesUtil.getPsiClass(m.getReturnType());
+
+                        if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+                            Arrays.stream(parameterClass.getAllFields()).forEach(f -> {
+                                map.putAll(recursionToJavaMetaBean(
+                                        HumpNamingUtil.hump(m.getName().replace("get", ""))
+                                                + ".get" + HumpNamingUtil.humpFirstUp(f.getName()),
+                                        parameterName + "." + m.getName() + "()", f.getType()));
+                            });
+
+                        } else {
+                            JavaMetaBean bean = new JavaMetaBean();
+                            bean.setType(m.getReturnType());
+                            bean.setMethodText(parameterName + "." + m.getName() + "()");
+                            map.put(HumpNamingUtil.hump(m.getName().replace("get", "")), bean);
+                        }
+                    });
+        } else {
+            JavaMetaBean bean = new JavaMetaBean();
+            bean.setType(psiType);
+            if (StringUtils.isNotEmpty(prefix)) {
+                String[] split = parameterName.split("\\.");
+                bean.setMethodText(prefix + "." + split[split.length - 1]  + "()");
+            } else {
+                bean.setMethodText(parameterName);
+            }
+            map.put(parameterName, bean);
         }
         return map;
     }
@@ -167,10 +232,10 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
             // 包装类型
             doNewClass(psiClass, localVar);
-        } else  {
+        } else {
 
             // 自定义实体类处理
-            doEntityClass(psiClass, localVar);
+            ClipboardUtil.setClipboard(doEntityClass(psiClass, localVar));
         }
     }
 
@@ -187,30 +252,43 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
         ClipboardUtil.setClipboard(context.toString());
     }
 
-    private void doEntityClass(PsiClass psiClass, String localVar) {
+    private String doEntityClass(PsiClass psiClass, String localVar) {
+        if (psiClass.getInnerClasses().length == 0) {
+            return doSetField(psiClass, localVar);
+        } else {
+            Optional<PsiClass> processClass = Arrays.stream(psiClass.getInnerClasses())
+                    .filter(i -> i.getName().endsWith("Builder"))
+                    .findFirst();
 
-        doSetField(psiClass, localVar);
-
-        Arrays.stream(psiClass.getInnerClasses()).forEach(c -> {
-            if (c.getName().endsWith("Builder")) {
-                doBuildField(psiClass, psiClass.getName());
-            }
-        });
+            if (processClass.isPresent()) return doBuildField(psiClass, psiClass.getName());
+        }
+        return doSetField(psiClass, localVar);
     }
 
-    private void doBuildField(PsiClass psiClass, String className) {
+    private String doBuildField(PsiClass psiClass, String className) {
 
         StringBuilder context = new StringBuilder();
 
         context.append("return ").append(className).append(".builder()\n");
 
-        Arrays.stream(psiClass.getAllFields()).forEach(f -> context.append(".").append(f.getName()).append("()\n"));
+        Arrays.stream(psiClass.getAllFields()).forEach(f -> {
+            PsiClass parameterClass = PsiTypesUtil.getPsiClass(f.getType());
+            if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+                context.append(".").append(f.getName()).append("(")
+                        .append(doBuildField(parameterClass, parameterClass.getName())
+                                .replace("return ", "").replace(";", ""))
+                        .append("\n").append(")\n");
+            } else {
+                context.append(".").append(f.getName()).append("()\n");
+            }
+        });
 
         context.append(".build();");
-        ClipboardUtil.setClipboard(context.toString());
+
+        return context.toString();
     }
 
-    private void doSetField(PsiClass psiClass, String localVar) {
+    private String doSetField(PsiClass psiClass, String localVar) {
 
         StringBuilder context = new StringBuilder();
 
@@ -221,11 +299,21 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
         Arrays.stream(psiClass.getAllMethods()).forEach(m -> {
             if (m.getName().startsWith("set")) {
-                context.append(TabUtil.getTabSpace()).append(name).append(".").append(m.getName()).append("();\n");
+                if (m.getParameterList().isEmpty()) return;
+                PsiParameter parameter = m.getParameterList().getParameter(0);
+                PsiClass parameterClass = PsiTypesUtil.getPsiClass(parameter.getType());
+                if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+                    String result = doSetField(parameterClass, HumpNamingUtil.hump(parameterClass.getName()));
+                    context.append(result);
+                    context.append(TabUtil.getTabSpace()).append(name).append(".").append(m.getName())
+                            .append("(").append(HumpNamingUtil.hump(parameterClass.getName())).append(");\n");
+                } else {
+                    context.append(TabUtil.getTabSpace()).append(name).append(".").append(m.getName()).append("();\n");
+                }
             }
         });
 
-        ClipboardUtil.setClipboard(context.toString());
+        return context.toString();
     }
 
     private void doPsiLocalVariable(PsiLocalVariable psiVariable) {

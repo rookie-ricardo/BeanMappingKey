@@ -12,7 +12,7 @@ tasks.withType(Javadoc) {
 }
 
 group 'org.rookie.plugins'
-version '1.3'
+version '2.0'
 
 sourceCompatibility = 1.8
 
@@ -35,6 +35,11 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+      2.0 (2022-06-04) <br>
+      <ul>
+        <li>feature: Support for generation between two nested objects.</li>
+        <li>Optimization part of the code.</li>
+      </ul>
       1.3 (2022-04-14) <br>
       <ul>
         <li>added 2022.X version support.</li>

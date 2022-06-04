@@ -8,9 +8,13 @@
         <![CDATA[
       <p>An object field mapping plug-in, which can automatically generate conversion codes between two objects.</p>
       <p>It is used to replace implicit object conversion plug-ins such as BeanUtil and MapStrut, reduce useless labor while retaining the details of object conversion.</p>
+      <p>The latest 2.X version supports nested object generation !!!</p>
       <br/>
       <p>一个对象字段映射插件，它可以自动生成两个对象之间的转换代码，
       用于替代 BeanUtil、MapStrut 之类的隐式对象转换插件，减少无用劳动的同时又能保留对象转换细节。</p>
+      <p>最新 2.0 版本功能大提升，支持嵌套对象生成代码 ！！！</p>
+
+      <p>更多详细用法请参照 <a href="https://github.com/rookie-ricardo/BeanMappingKey">GitHub</a> (For detailed usage, please check Github.)</p>
         ]]>
 
     </description>
