@@ -36,6 +36,10 @@ public class JavaClassTypeUtil {
         return "enum".equalsIgnoreCase(type);
     }
 
+    public static boolean isOptional(String type) {
+        return "Optional".equalsIgnoreCase(type);
+    }
+
     public static boolean isArray(PsiClass psiClass) {
         return isArray(psiClass.getName());
     }
@@ -108,7 +112,7 @@ public class JavaClassTypeUtil {
 
     public static boolean isEntityClass(PsiClass psiClass) {
         if (isBasic(psiClass.getName()) || isEnum(psiClass.getName()) || isWrap(psiClass)
-                || isArray(psiClass) || isList(psiClass) || isMap(psiClass)) {
+                || isArray(psiClass) || isList(psiClass) || isMap(psiClass) || isOptional(psiClass.getName())) {
             return false;
         }
         return true;

@@ -68,9 +68,16 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
         Map<String, JavaMetaBean> fromFieldMap = toParamsFieldMap(psiMethod.getParameterList());
         PsiClass returnClass = PsiTypesUtil.getPsiClass(psiMethod.getReturnType());
 
+        if (returnClass == null) {
+            doErrorNotify(psiMethod.getProject());
+            return;
+        }
+
         StringBuilder context = new StringBuilder();
 
-        if (Arrays.stream(returnClass.getInnerClasses()).anyMatch(c -> c.getName().contains("Builder"))) {
+        if (Arrays.stream(returnClass.getInnerClasses())
+                .anyMatch(c -> c.getName() != null && c.getName().contains("Builder"))) {
+
             // builder model
             context.append(TabUtil.getDoubleTabSpace()).append("return ").append(returnClass.getName()).append(".builder()\n");
             Arrays.stream(returnClass.getAllFields()).forEach(f -> {
@@ -79,7 +86,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
                         .append(".").append(f.getName()).append("(");
                 PsiClass parameterClass = PsiTypesUtil.getPsiClass(f.getType());
 
-                if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+                if (parameterClass != null && JavaClassTypeUtil.isEntityClass(parameterClass)) {
                     context.append(parameterClass.getName()).append(".builder()\n");
 
                     Arrays.stream(parameterClass.getAllFields()).forEach(subF -> {
@@ -118,7 +125,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
                 PsiClass parameterClass = PsiTypesUtil.getPsiClass(f.getType());
 
                 // 嵌套实体
-                if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+                if (parameterClass != null && JavaClassTypeUtil.isEntityClass(parameterClass)) {
 
                     context.append(TabUtil.getDoubleTabSpace())
                             .append(parameterClass.getName()).append(" ").append(f.getName())
@@ -188,7 +195,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
                     .forEach(m -> {
                         PsiClass parameterClass = PsiTypesUtil.getPsiClass(m.getReturnType());
 
-                        if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+                        if (parameterClass != null && JavaClassTypeUtil.isEntityClass(parameterClass)) {
                             Arrays.stream(parameterClass.getAllFields()).forEach(f -> {
                                 map.putAll(recursionToJavaMetaBean(
                                         HumpNamingUtil.hump(m.getName().replace("get", ""))
@@ -257,7 +264,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
             return doSetField(psiClass, localVar);
         } else {
             Optional<PsiClass> processClass = Arrays.stream(psiClass.getInnerClasses())
-                    .filter(i -> i.getName().endsWith("Builder"))
+                    .filter(i -> i.getName() != null && i.getName().endsWith("Builder"))
                     .findFirst();
 
             if (processClass.isPresent()) return doBuildField(psiClass, psiClass.getName());
@@ -273,7 +280,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
         Arrays.stream(psiClass.getAllFields()).forEach(f -> {
             PsiClass parameterClass = PsiTypesUtil.getPsiClass(f.getType());
-            if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+            if (parameterClass != null && JavaClassTypeUtil.isEntityClass(parameterClass)) {
                 context.append(".").append(f.getName()).append("(")
                         .append(doBuildField(parameterClass, parameterClass.getName())
                                 .replace("return ", "").replace(";", ""))
@@ -299,10 +306,15 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
 
         Arrays.stream(psiClass.getAllMethods()).forEach(m -> {
             if (m.getName().startsWith("set")) {
-                if (m.getParameterList().isEmpty()) return;
                 PsiParameter parameter = m.getParameterList().getParameter(0);
-                PsiClass parameterClass = PsiTypesUtil.getPsiClass(parameter.getType());
-                if (JavaClassTypeUtil.isEntityClass(parameterClass)) {
+                PsiClass parameterClass;
+                if (parameter != null) {
+                    parameterClass = PsiTypesUtil.getPsiClass(parameter.getType());
+                } else {
+                    parameterClass = null;
+                }
+
+                if (parameterClass != null && JavaClassTypeUtil.isEntityClass(parameterClass)) {
                     String result = doSetField(parameterClass, HumpNamingUtil.hump(parameterClass.getName()));
                     context.append(result);
                     context.append(TabUtil.getTabSpace()).append(name).append(".").append(m.getName())
