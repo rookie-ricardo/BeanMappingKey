@@ -227,18 +227,10 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     private void doPsiClass(PsiClass psiClass, String localVar) {
 
         // 基础数据类型 & 枚举类型 处理
-        if (Objects.isNull(psiClass)
-                || JavaClassTypeUtil.isEnum(psiClass.getName())
-                || JavaClassTypeUtil.isBasic(psiClass.getName())
-                || JavaClassTypeUtil.isArray(psiClass) || psiClass.isInterface()
-                || JavaClassTypeUtil.isList(psiClass) || JavaClassTypeUtil.isMap(psiClass)) {
+        if (Objects.isNull(psiClass) || !JavaClassTypeUtil.isEntityClass(psiClass)) {
 
             // check
             doErrorNotify(psiClass.getProject());
-        } else if (JavaClassTypeUtil.isWrap(psiClass)) {
-
-            // 包装类型
-            doNewClass(psiClass, localVar);
         } else {
 
             // 自定义实体类处理

@@ -12,7 +12,7 @@ tasks.withType(Javadoc) {
 }
 
 group 'org.rookie.plugins'
-version '2.1'
+version '2.2'
 
 sourceCompatibility = 1.8
 
@@ -35,6 +35,10 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+      2.2 (2022-06-13) <br>
+      <ul>
+        <li>Not dealing with classes in java core.</li>
+      </ul>
       2.1 (2022-06-09) <br>
       <ul>
         <li>Add Optional variable support.</li>
