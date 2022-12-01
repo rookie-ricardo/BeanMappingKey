@@ -12,7 +12,7 @@ tasks.withType(Javadoc) {
 }
 
 group 'org.rookie.plugins'
-version '2.2'
+version '2.3'
 
 sourceCompatibility = 1.8
 
@@ -35,6 +35,10 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+      2.3 (2022-12-01) <br>
+      <ul>
+        <li>Support the latest version of idea</li>
+      </ul>
       2.2 (2022-06-13) <br>
       <ul>
         <li>Not dealing with classes in java core.</li>
@@ -71,7 +75,6 @@ patchPluginXml {
       """
 
     sinceBuild = "201"
-    untilBuild = "223"
 }
 test {
     useJUnitPlatform()
