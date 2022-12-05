@@ -12,7 +12,7 @@ tasks.withType(Javadoc) {
 }
 
 group 'org.rookie.plugins'
-version '2.3'
+version '2.5'
 
 sourceCompatibility = 1.8
 
@@ -32,9 +32,14 @@ dependencies {
 intellij {
     version = '2021.3'
     plugins = ['com.intellij.java']
+    updateSinceUntilBuild = false
 }
 patchPluginXml {
     changeNotes = """
+      2.5 (2022-12-02) <br>
+      <ul>
+        <li>Support all subsequent versions without updating</li>
+      </ul>
       2.3 (2022-12-01) <br>
       <ul>
         <li>Support the latest version of idea</li>
