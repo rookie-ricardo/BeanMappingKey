@@ -1,5 +1,6 @@
 package org.rookie.plugins.action;
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
@@ -45,5 +46,10 @@ public class BeanMappingKeyAction extends AnAction {
         String selectedText = editor.getSelectionModel().getSelectedText(true);
 
         return !StringUtils.isBlank(selectedText);
+    }
+
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
     }
 }

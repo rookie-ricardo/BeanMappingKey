@@ -20,6 +20,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     private static final String INFO_MSG = "BeanMapping : 已复制到粘贴板 (Copied to pasteboard) !";
     private static final String ERROR_MSG = "BeanMapping : 当前所选对象不支持 (The currently selected object is not supported)";
     private boolean isSuccessful = true;
+    private IntellijNotifyUtil notifyUtil = new IntellijNotifyUtil();
 
     @Override
     public void exec(AnActionEvent e) {
@@ -331,7 +332,7 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     }
 
     private boolean isNotAvailablePsiMethod(PsiMethod psiMethod) {
-        if (psiMethod.getParameterList().isEmpty() || PsiType.VOID.equals(psiMethod.getReturnType())) {
+        if (psiMethod.getParameterList().isEmpty() || PsiTypes.voidType().equals(psiMethod.getReturnType())) {
             doErrorNotify(psiMethod.getProject());
             return true;
         }
@@ -339,12 +340,12 @@ public class BeanMappingJavaDelegate implements BeanMappingDelegate {
     }
 
     private void doInfoNotify(Project project) {
-        IntellijNotifyUtil.notifyInfo(project, INFO_MSG);
+        notifyUtil.notifyInfo(project, INFO_MSG);
     }
 
     private void doErrorNotify(Project project) {
         this.isSuccessful = false;
-        IntellijNotifyUtil.notifyError(project, ERROR_MSG);
+        notifyUtil.notifyError(project, ERROR_MSG);
     }
 
 }

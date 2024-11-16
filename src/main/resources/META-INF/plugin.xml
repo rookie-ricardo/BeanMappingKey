@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin require-restart="false">
     <id>org.rookie.plugins.BeanMappingKey</id>
     <name>BeanMappingKey</name>
     <vendor email="Rookie.Ricardo@outlook.com" url="https://github.com/rookie-ricardo">Rookie</vendor>
@@ -26,7 +26,9 @@
     <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
+       <notificationGroup id="BeanMappingKeyNotification"
+                     displayType="BALLOON"
+                     key="notification.group.name"/>
     </extensions>
 
     <actions>
@@ -40,7 +42,4 @@
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl alt M"/>
         </action>
     </actions>
-    
-    <idea-version since-build="201"/>
-
 </idea-plugin>
